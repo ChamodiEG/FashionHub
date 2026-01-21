@@ -53,7 +53,12 @@ const Products = () => {
       if (filters.search) params.append('search', filters.search);
 
       const data = await apiFetch(`/api/products?${params.toString()}`);
-      setProducts(data.products || []);
+      // Transform products to ensure images field is available
+      const transformedProducts = (data.products || []).map(p => ({
+        ...p,
+        images: p.images || (p.image ? [p.image] : [])
+      }));
+      setProducts(transformedProducts);
     } catch (error) {
       console.error('Error loading products:', error);
       setProducts([]);

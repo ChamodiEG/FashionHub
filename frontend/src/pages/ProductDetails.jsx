@@ -24,12 +24,15 @@ const ProductDetails = () => {
       setLoading(true);
       const data = await apiFetch(`/api/products/${id}`);
       if (data.product) {
-        setProduct(data.product);
-        setMainImage(data.product.image || data.product.images?.[0]);
+        const product = {
+          ...data.product,
+          images: data.product.images || (data.product.image ? [data.product.image] : [])
+        };
+        setProduct(product);
+        setMainImage(product.images?.[0] || product.image);
       }
     } catch (error) {
       console.error('Error loading product:', error);
-      setLoading(false);
     } finally {
       setLoading(false);
     }
@@ -77,10 +80,10 @@ const ProductDetails = () => {
           </button>
 
           <div className="bg-gray-900 rounded-lg overflow-hidden">
-            <img src={mainImage || product.image} alt={product.name} className="w-full h-96 object-cover" />
+            <img src={mainImage || product.images?.[0] || product.image || 'https://via.placeholder.com/600'} alt={product.name} className="w-full h-96 object-cover" />
           </div>
 
-          {product.images && product.images.length > 1 && (
+          {product.images && product.images.length > 0 && (
             <div className="mt-3 flex gap-2">
               {product.images.map((img, idx) => (
                 <button key={idx} onClick={() => setMainImage(img)} className="w-20 h-20 rounded overflow-hidden border border-gray-800 p-1">

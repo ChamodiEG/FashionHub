@@ -19,11 +19,15 @@ const Home = () => {
       setLoading(true);
       const data = await apiFetch('/api/products');
       if (data.products) {
-        setFeaturedProducts(data.products.slice(0, 4));
+        // Transform products to ensure images field is available
+        const transformedProducts = data.products.slice(0, 4).map(p => ({
+          ...p,
+          images: p.images || (p.image ? [p.image] : [])
+        }));
+        setFeaturedProducts(transformedProducts);
       }
     } catch (error) {
       console.error('Error loading products:', error);
-      setLoading(false);
     } finally {
       setLoading(false);
     }

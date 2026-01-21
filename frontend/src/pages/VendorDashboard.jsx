@@ -18,7 +18,7 @@ const VendorDashboard = () => {
     price: '',
     stock: '',
     category: '',
-    image: ''
+    images: ['']
   });
 
   useEffect(() => {
@@ -68,33 +68,67 @@ const VendorDashboard = () => {
       
       const productPayload = {
         ...formData,
+        images: formData.images.filter(img => img.trim()),
         price: parseFloat(formData.price),
         stock: parseInt(formData.stock)
       };
 
-      const response = await apiFetch('/api/products', {
-        method: 'POST',
+      const url = editingProduct ? `/api/products/${editingProduct._id}` : '/api/products';
+      const method = editingProduct ? 'PUT' : 'POST';
+      
+      const response = await apiFetch(url, {
+        method,
         body: JSON.stringify(productPayload)
       });
 
       if (response.product) {
-        setProducts(prev => [...prev, response.product]);
+        if (editingProduct) {
+          setProducts(prev => prev.map(p => p._id === response.product._id ? response.product : p));
+        } else {
+          setProducts(prev => [...prev, response.product]);
+        }
         setFormData({
           name: '',
           description: '',
           price: '',
           stock: '',
           category: '',
-          image: ''
+          images: ['']
         });
+        setEditingProduct(null);
         setActiveTab('products');
       }
     } catch (err) {
-      console.error('Error adding product:', err);
-      setError(err.message || 'Failed to add product');
+      console.error('Error saving product:', err);
+      setError(err.message || 'Failed to save product');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEditProduct = (product) => {
+    setFormData({
+      name: product.name,
+      description: product.description,
+      price: product.price.toString(),
+      stock: product.stock.toString(),
+      category: product.category,
+      images: product.images || ['']
+    });
+    setEditingProduct(product);
+    setActiveTab('add');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingProduct(null);
+    setFormData({
+      name: '',
+      description: '',
+      price: '',
+      stock: '',
+      category: '',
+      images: ['']
+    });
   };
 
   const stats = {
@@ -230,7 +264,7 @@ const VendorDashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {products.map((product) => (
                   <div key={product._id} className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden hover:border-gray-700 transition">
-                    <img src={product.image} alt={product.name} className="w-full h-48 object-cover" />
+                    <img src={product.images?.[0] || 'https://via.placeholder.com/300'} alt={product.name} className="w-full h-48 object-cover" />
                     <div className="p-4">
                       <h3 className="text-white font-semibold mb-2">{product.name}</h3>
                       <div className="grid grid-cols-2 gap-2 text-sm mb-4">
@@ -246,7 +280,10 @@ const VendorDashboard = () => {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <button className="flex-1 flex items-center justify-center gap-2 py-2 bg-black border border-gray-800 text-white rounded hover:bg-gray-800 transition">
+                        <button
+                          onClick={() => handleEditProduct(product)}
+                          className="flex-1 flex items-center justify-center gap-2 py-2 bg-black border border-gray-800 text-white rounded hover:bg-gray-800 transition"
+                        >
                           <Edit size={16} />
                           Edit
                         </button>
@@ -269,7 +306,7 @@ const VendorDashboard = () => {
         {/* Add Product Tab */}
         {activeTab === 'add' && (
           <div className="max-w-2xl">
-            <h2 className="text-2xl font-bold text-white mb-6">Add New Product</h2>
+            <h2 className="text-2xl font-bold text-white mb-6">{editingProduct ? 'Edit Product' : 'Add New Product'}</h2>
             <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
               {error && (
                 <div className="mb-4 p-3 bg-red-900 bg-opacity-30 border border-red-700 text-red-500 rounded">
@@ -354,25 +391,64 @@ const VendorDashboard = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Image URL</label>
-                  <input
-                    type="url"
-                    name="image"
-                    value={formData.image}
-                    onChange={handleFormChange}
-                    placeholder="https://example.com/image.jpg"
-                    required
-                    className="w-full px-4 py-3 bg-black border border-gray-800 rounded-lg text-white focus:outline-none focus:border-gray-600"
-                  />
+                  <label className="block text-sm text-gray-400 mb-2">Image URL(s)</label>
+                  <div className="space-y-2">
+                    {formData.images.map((img, idx) => (
+                      <div key={idx} className="flex gap-2">
+                        <input
+                          type="url"
+                          value={img}
+                          onChange={(e) => {
+                            const newImages = [...formData.images];
+                            newImages[idx] = e.target.value;
+                            setFormData(prev => ({ ...prev, images: newImages }));
+                          }}
+                          placeholder="https://example.com/image.jpg"
+                          required={idx === 0}
+                          className="flex-1 px-4 py-3 bg-black border border-gray-800 rounded-lg text-white focus:outline-none focus:border-gray-600"
+                        />
+                        {formData.images.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newImages = formData.images.filter((_, i) => i !== idx);
+                              setFormData(prev => ({ ...prev, images: newImages }));
+                            }}
+                            className="px-3 py-3 bg-red-900 bg-opacity-30 border border-red-700 text-red-500 rounded hover:bg-opacity-50 transition"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, images: [...prev.images, ''] }))}
+                    className="mt-2 px-3 py-2 bg-gray-800 text-gray-300 rounded hover:bg-gray-700 transition text-sm"
+                  >
+                    Add Another Image
+                  </button>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3 bg-white text-black font-semibold rounded-lg hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? 'Adding Product...' : 'Add Product'}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex-1 py-3 bg-white text-black font-semibold rounded-lg hover:bg-gray-200 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? (editingProduct ? 'Updating...' : 'Adding...') : (editingProduct ? 'Update Product' : 'Add Product')}
+                  </button>
+                  {editingProduct && (
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      className="flex-1 py-3 bg-gray-800 text-gray-300 font-semibold rounded-lg hover:bg-gray-700 transition"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
               </form>
             </div>
           </div>

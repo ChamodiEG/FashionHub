@@ -27,7 +27,7 @@ const ItemCard = ({ product }) => {
       {/* Image Container */}
       <div className="relative overflow-hidden">
         <img 
-          src={product.image || product.images?.[0] || 'https://via.placeholder.com/400'} 
+          src={product.images?.[0] || product.image || 'https://via.placeholder.com/400'} 
           alt={product.name} 
           className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-500"
         />
