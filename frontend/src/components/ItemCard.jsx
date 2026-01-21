@@ -16,7 +16,7 @@ const ItemCard = ({ product }) => {
   };
 
   const handleViewDetails = () => {
-    navigate(`/products/${product.id}`);
+    navigate(`/products/${product._id}`);
   };
 
   return (

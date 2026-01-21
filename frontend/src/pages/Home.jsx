@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import Hero from '../components/Hero';
 import ItemCard from '../components/ItemCard';
 import { TrendingUp, Award, Truck, Shield } from 'lucide-react';
+import { apiFetch } from '../utils/api';
 
 const Home = () => {
   const [featuredProducts, setFeaturedProducts] = useState([]);
@@ -15,60 +16,15 @@ const Home = () => {
 
   const loadFeaturedProducts = async () => {
     try {
-      // Replace with actual API call
-      // const response = await fetch('http://localhost:5000/api/products?featured=true');
-      // const data = await response.json();
-      
-      // Mock data for now
-      const mockProducts = [
-        {
-          id: 1,
-          name: 'Classic White Shirt',
-          price: 49.99,
-          category: 'shirts',
-          stock: 10,
-          image: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400',
-          description: 'Timeless white shirt for any occasion',
-          sizes: ['S', 'M', 'L', 'XL']
-        },
-        {
-          id: 2,
-          name: 'Black Denim Jeans',
-          price: 79.99,
-          category: 'pants',
-          stock: 15,
-          image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400',
-          description: 'Premium denim with perfect fit',
-          sizes: ['28', '30', '32', '34']
-        },
-        {
-          id: 3,
-          name: 'Gray Hoodie',
-          price: 59.99,
-          category: 'outerwear',
-          stock: 8,
-          image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400',
-          description: 'Comfortable and stylish hoodie',
-          sizes: ['S', 'M', 'L', 'XL']
-        },
-        {
-          id: 4,
-          name: 'Summer Dress',
-          price: 89.99,
-          category: 'dresses',
-          stock: 5,
-          image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400',
-          description: 'Perfect for summer days',
-          sizes: ['XS', 'S', 'M', 'L']
-        }
-      ];
-
-      setTimeout(() => {
-        setFeaturedProducts(mockProducts);
-        setLoading(false);
-      }, 500);
+      setLoading(true);
+      const data = await apiFetch('/api/products');
+      if (data.products) {
+        setFeaturedProducts(data.products.slice(0, 4));
+      }
     } catch (error) {
       console.error('Error loading products:', error);
+      setLoading(false);
+    } finally {
       setLoading(false);
     }
   };
@@ -194,7 +150,7 @@ const Home = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {featuredProducts.map((product) => (
-                <ItemCard key={product.id} product={product} />
+                <ItemCard key={product._id} product={product} />
               ))}
             </div>
           )}

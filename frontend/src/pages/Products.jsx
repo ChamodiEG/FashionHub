@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ItemCard from '../components/ItemCard';
 import { Search, Filter, X, SlidersHorizontal } from 'lucide-react';
+import { apiFetch } from '../utils/api';
 
 const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -43,107 +44,20 @@ const Products = () => {
   const loadProducts = async () => {
     setLoading(true);
     try {
-      // Replace with actual API call
-      const mockProducts = [
-        {
-          id: 1,
-          name: 'Classic White Shirt',
-          price: 49.99,
-          category: 'shirts',
-          stock: 10,
-          image: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400',
-          description: 'Timeless white shirt for any occasion',
-          sizes: ['S', 'M', 'L', 'XL']
-        },
-        {
-          id: 2,
-          name: 'Black Denim Jeans',
-          price: 79.99,
-          category: 'pants',
-          stock: 15,
-          image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=400',
-          description: 'Premium denim with perfect fit',
-          sizes: ['28', '30', '32', '34']
-        },
-        {
-          id: 3,
-          name: 'Gray Hoodie',
-          price: 59.99,
-          category: 'outerwear',
-          stock: 8,
-          image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400',
-          description: 'Comfortable and stylish hoodie',
-          sizes: ['S', 'M', 'L', 'XL']
-        },
-        {
-          id: 4,
-          name: 'Summer Dress',
-          price: 89.99,
-          category: 'dresses',
-          stock: 5,
-          image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400',
-          description: 'Perfect for summer days',
-          sizes: ['XS', 'S', 'M', 'L']
-        },
-        {
-          id: 5,
-          name: 'Leather Jacket',
-          price: 199.99,
-          category: 'outerwear',
-          stock: 3,
-          image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400',
-          description: 'Premium leather jacket',
-          sizes: ['M', 'L', 'XL']
-        },
-        {
-          id: 6,
-          name: 'Blue Casual Shirt',
-          price: 39.99,
-          category: 'shirts',
-          stock: 12,
-          image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400',
-          description: 'Comfortable casual shirt',
-          sizes: ['S', 'M', 'L', 'XL']
-        }
-      ];
+      // Build query params
+      const params = new URLSearchParams();
+      if (filters.category) params.append('category', filters.category);
+      if (filters.minPrice) params.append('minPrice', filters.minPrice);
+      if (filters.maxPrice) params.append('maxPrice', filters.maxPrice);
+      if (filters.sort) params.append('sort', filters.sort);
+      if (filters.search) params.append('search', filters.search);
 
-      // Apply filters
-      let filtered = mockProducts;
-
-      if (filters.category) {
-        filtered = filtered.filter(p => p.category === filters.category);
-      }
-
-      if (filters.search) {
-        filtered = filtered.filter(p => 
-          p.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-          p.description.toLowerCase().includes(filters.search.toLowerCase())
-        );
-      }
-
-      if (filters.minPrice) {
-        filtered = filtered.filter(p => p.price >= parseFloat(filters.minPrice));
-      }
-
-      if (filters.maxPrice) {
-        filtered = filtered.filter(p => p.price <= parseFloat(filters.maxPrice));
-      }
-
-      // Apply sorting
-      if (filters.sort === 'price_asc') {
-        filtered.sort((a, b) => a.price - b.price);
-      } else if (filters.sort === 'price_desc') {
-        filtered.sort((a, b) => b.price - a.price);
-      } else if (filters.sort === 'name') {
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
-      }
-
-      setTimeout(() => {
-        setProducts(filtered);
-        setLoading(false);
-      }, 500);
+      const data = await apiFetch(`/api/products?${params.toString()}`);
+      setProducts(data.products || []);
     } catch (error) {
       console.error('Error loading products:', error);
+      setProducts([]);
+    } finally {
       setLoading(false);
     }
   };
@@ -321,7 +235,7 @@ const Products = () => {
         ) : products.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {products.map(product => (
-              <ItemCard key={product.id} product={product} />
+              <ItemCard key={product._id} product={product} />
             ))}
           </div>
         ) : (
