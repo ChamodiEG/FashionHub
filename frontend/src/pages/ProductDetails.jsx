@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, ArrowLeft } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { apiFetch } from '../utils/api';
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -19,101 +20,22 @@ const ProductDetails = () => {
   }, [id]);
 
   const loadProduct = async () => {
-    setLoading(true);
-
-    // Mock product data - should be replaced with API request later
-    const mockProducts = [
-      {
-        id: 1,
-        name: 'Classic White Shirt',
-        price: 49.99,
-        category: 'shirts',
-        stock: 10,
-        image: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=900',
-        images: [
-          'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=900'
-        ],
-        description: 'Timeless white shirt for any occasion',
-        sizes: ['S', 'M', 'L', 'XL'],
-        vendor: { name: 'Maven Apparel', storeName: 'Maven' }
-      },
-      {
-        id: 2,
-        name: 'Black Denim Jeans',
-        price: 79.99,
-        category: 'pants',
-        stock: 15,
-        image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?w=900',
-        images: [
-          'https://images.unsplash.com/photo-1542272604-787c3835535d?w=900'
-        ],
-        description: 'Premium denim with perfect fit',
-        sizes: ['28', '30', '32', '34'],
-        vendor: { name: 'DenimWorks' }
-      },
-      {
-        id: 3,
-        name: 'Gray Hoodie',
-        price: 59.99,
-        category: 'outerwear',
-        stock: 8,
-        image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=900',
-        images: [
-          'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=900'
-        ],
-        description: 'Comfortable and stylish hoodie',
-        sizes: ['S', 'M', 'L', 'XL'],
-        vendor: { name: 'Cozy Co.' }
-      },
-      {
-        id: 4,
-        name: 'Summer Dress',
-        price: 89.99,
-        category: 'dresses',
-        stock: 5,
-        image: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=900',
-        images: [
-          'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=900'
-        ],
-        description: 'Perfect for summer days',
-        sizes: ['XS', 'S', 'M', 'L'],
-        vendor: { name: 'Sunrise Styles' }
-      },
-      {
-        id: 5,
-        name: 'Leather Jacket',
-        price: 199.99,
-        category: 'outerwear',
-        stock: 3,
-        image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=900',
-        images: [
-          'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=900'
-        ],
-        description: 'Premium leather jacket',
-        sizes: ['M', 'L', 'XL'],
-        vendor: { name: 'Rogue Leather' }
-      },
-      {
-        id: 6,
-        name: 'Blue Casual Shirt',
-        price: 39.99,
-        category: 'shirts',
-        stock: 12,
-        image: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=900',
-        images: [
-          'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=900'
-        ],
-        description: 'Comfortable casual shirt',
-        sizes: ['S', 'M', 'L', 'XL'],
-        vendor: { name: 'Blue Threads' }
+    try {
+      setLoading(true);
+      const data = await apiFetch(`/api/products/${id}`);
+      if (data.product) {
+        const product = {
+          ...data.product,
+          images: data.product.images || (data.product.image ? [data.product.image] : [])
+        };
+        setProduct(product);
+        setMainImage(product.images?.[0] || product.image);
       }
-    ];
-
-    const found = mockProducts.find((p) => String(p.id) === String(id));
-
-    setProduct(found || null);
-    setMainImage(found?.images?.[0] || found?.image || null);
-    setLoading(false);
+    } catch (error) {
+      console.error('Error loading product:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAddToCart = () => {
@@ -158,10 +80,10 @@ const ProductDetails = () => {
           </button>
 
           <div className="bg-gray-900 rounded-lg overflow-hidden">
-            <img src={mainImage || product.image} alt={product.name} className="w-full h-96 object-cover" />
+            <img src={mainImage || product.images?.[0] || product.image || 'https://via.placeholder.com/600'} alt={product.name} className="w-full h-96 object-cover" />
           </div>
 
-          {product.images && product.images.length > 1 && (
+          {product.images && product.images.length > 0 && (
             <div className="mt-3 flex gap-2">
               {product.images.map((img, idx) => (
                 <button key={idx} onClick={() => setMainImage(img)} className="w-20 h-20 rounded overflow-hidden border border-gray-800 p-1">
@@ -240,7 +162,7 @@ const ProductDetails = () => {
           {/* Small meta */}
           <div className="mt-6 text-sm text-gray-500">
             <p>Shipping & returns: Free returns within 14 days.</p>
-            <p className="mt-2">SKU: {product.id}</p>
+            <p className="mt-2">SKU: {product._id}</p>
           </div>
 
         </div>
