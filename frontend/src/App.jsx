@@ -11,6 +11,7 @@ import Footer from './components/Footer';
 // Pages
 import Home from './pages/Home';
 import Products from './pages/Products';
+import ProductDetails from './pages/ProductDetails';
 import Cart from './pages/Cart';
 import Login from './pages/Login';
 import CustomerDashboard from './pages/CustomerDashboard';
@@ -74,6 +75,15 @@ function App() {
               element={
                 <AppLayout>
                   <Products />
+                </AppLayout>
+              }
+            />
+
+            <Route
+              path="/products/:id"
+              element={
+                <AppLayout>
+                  <ProductDetails />
                 </AppLayout>
               }
             />
